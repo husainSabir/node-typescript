@@ -3,17 +3,13 @@ import { config } from './env';
 
 export const connectDatabase = async (): Promise<void> => {
   try {
-    const options: mongoose.ConnectOptions = {
-      // Remove deprecated options - mongoose 6+ handles these automatically
-    };
-
-    await mongoose.connect(config.mongodbUri, options);
+    await mongoose.connect(config.mongodbUri);
 
     console.log('✅ MongoDB connected successfully');
     console.log(`📊 Database: ${mongoose.connection.name}`);
 
     // Handle connection events
-    mongoose.connection.on('error', (err) => {
+    mongoose.connection.on('error', (err: Error) => {
       console.error('❌ MongoDB connection error:', err);
     });
 
