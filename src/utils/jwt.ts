@@ -8,8 +8,8 @@ export interface TokenPayload {
 export const generateToken = (userId: string): string => {
   const payload: TokenPayload = { userId };
   return jwt.sign(payload, config.jwtSecret, {
-    expiresIn: config.jwtExpiresIn,
-  });
+    expiresIn: config.jwtExpiresIn as string,
+  } as jwt.SignOptions);
 };
 
 export const verifyToken = (token: string): TokenPayload => {
