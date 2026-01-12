@@ -5,6 +5,8 @@ import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { connectDatabase } from './config/database';
 import { config } from './config/env';
+import authRoutes from './routes/auth';
+import { authenticate, AuthRequest } from './middleware/auth';
 
 const app = express();
 const PORT = config.port;
@@ -14,6 +16,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
+// Auth routes (register, login)
+app.use('/api/auth', authRoutes);
 app.get('/', (_req: Request, res: Response) => {
   res.json({
     message: 'Welcome to TypeScript Backend API',
@@ -31,6 +35,32 @@ app.get('/health', (_req: Request, res: Response) => {
     database: dbStatus,
     timestamp: new Date().toISOString()
   });
+});
+
+// Protected routes (require authentication)
+// Get current user profile
+app.get('/api/users/me', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const user = req.user;
+    
+    res.json({
+      success: true,
+      data: {
+        id: user!._id,
+        name: user!.name,
+        email: user!.email,
+        createdAt: user!.createdAt,
+        updatedAt: user!.updatedAt
+      }
+    });
+  } catch (error: any) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch user profile',
+      error: config.nodeEnv === 'development' ? error.message : 'Internal server error'
+    });
+  }
 });
 
 // 404 handler
