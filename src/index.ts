@@ -7,6 +7,7 @@ import { connectDatabase } from './config/database';
 import { config } from './config/env';
 import authRoutes from './routes/auth';
 import { authenticate, AuthRequest } from './middleware/auth';
+import { User } from './models/User';
 
 const app = express();
 const PORT = config.port;
@@ -58,6 +59,32 @@ app.get('/api/users/me', authenticate, async (req: AuthRequest, res: Response) =
     res.status(500).json({
       success: false,
       message: 'Failed to fetch user profile',
+      error: config.nodeEnv === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
+// Get all users
+app.get('/api/users', authenticate, async (_req: Request, res: Response) => {
+  try {
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    
+    res.json({
+      success: true,
+      count: users.length,
+      data: users.map(user => ({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }))
+    });
+  } catch (error: any) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch users',
       error: config.nodeEnv === 'development' ? error.message : 'Internal server error'
     });
   }
